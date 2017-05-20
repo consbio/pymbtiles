@@ -5,6 +5,6 @@ install:
   - "pip install -e ."
   - "pip install -e .[test]"
   - "pip install coveralls>=1.1"
-script: "py.test --cov tpkutils --cov-report term-missing"
+script: "py.test --cov pymbtiles --cov-report term-missing"
 after_success:
   - coveralls || echo "!! intermittent coveralls failure"
