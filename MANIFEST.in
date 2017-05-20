@@ -1,0 +1,2 @@
+include mbtiles/mbtiles_schema.sql
+exclude MANIFEST.in
