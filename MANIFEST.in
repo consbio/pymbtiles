@@ -1,2 +1,2 @@
-include mbtiles/mbtiles_schema.sql
+include pymbtiles/mbtiles_tile_schema.sql
 exclude MANIFEST.in

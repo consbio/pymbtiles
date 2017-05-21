@@ -2,7 +2,7 @@ import os
 from setuptools import setup
 
 
-long_description = 'Utility to read and export ArcGIS Tile Packages'
+long_description = 'Utility to read and write Mapbox mbtiles'
 
 
 if os.path.exists('README.md'):
@@ -26,7 +26,7 @@ setup(
     author_email='bcward@consbio.org',
     description='MapBox Mbtiles Utilities',
     long_description=long_description,
-    install_requires=['click'],
+    install_requires=[],
     include_package_data=True,
     extras_require={
         'test': ['pytest', 'pytest-cov'],
