@@ -9,7 +9,7 @@ Python 2.7.x is not supported at this time due to different sqlite3 API.
 
 
 ## Goals
-* Provide a very lightweight API for reading / writing mbiles files
+* Provide a very lightweight API for reading / writing mbtiles files
 
 
 
@@ -27,14 +27,76 @@ Once functionality stabilizes, it will be added to
 ## Usage
 
 ### Python API
-TODO:
+
+open for reading and read a tile:
+
+```
+from pymbtiles import MBTiles
+with MBtiles('my.mbtiles') as src:
+    tile_data = src.read_tile(z=0, x=0, y=0)
+```
+
+returns tile data in bytes.
+
+
+open for writing (existing file will be overwritten):
+
+```
+with MBtiles('my.mbtiles', mode='w') as out:
+    out.write_tile(z=0, x=0, y=0, tile_data)
+```
+
+or write a bunch of tiles at once:
+
+```
+from pymbtiles import MBTiles, Tile
+
+tiles = (
+    Tile(z=1, x=0, y=0, tile_data=first_tile),
+    ...
+)
+
+with MBtiles('my.mbtiles', mode='w') as out:
+    out.write_tiles(tiles)
+```
+
+
+Use `r+` mode to read and write.
+
+
+Metadata is stored in the `meta` attribute of the mbtiles instance:
+
+```
+with MBtiles('my.mbtiles') as src:
+    metadata = src.meta
+```
+
+This metadata is stored in the `metadata` table in the mbtiles file, and contains
+a number of records required or optional under the
+[mbtiles specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.1/spec.md) .
+
+
+To update metadata:
+
+```
+with MBtiles('my.mbtiles', 'r+') as out:
+    out.meta['some_key'] = 'some_value'
+```
+
+You can set several values at once by passing in a new `dict` object:
+
+```
+with MBtiles('my.mbtiles', 'w') as out:
+    out.meta = my_metadata_dict
+```
+
+
+
 
 *Note:*
 * tiles are output to mbtiles format in xyz tile scheme.
 
 
-### Metadata / descriptive attributes
-TODO
 
 ## Credits:
 Tile package format is described [here](https://gdbgeek.wordpress.com/2012/08/09/demystifying-the-esri-compact-cache/).
