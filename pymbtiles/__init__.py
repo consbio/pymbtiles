@@ -1,10 +1,13 @@
 import hashlib
 import logging
 import os
+import sys
 import sqlite3
 from collections import namedtuple
 
 logger = logging.getLogger('pymbtiles')
+
+IS_PY2 = sys.version_info[0] == 2
 
 
 Tile = namedtuple('Tile', ['z', 'x', 'y', 'data'])
@@ -23,17 +26,17 @@ class MBtiles(object):
             self._cursor = cursor
             if autoload:
                 self._cursor.execute('SELECT name, value from metadata')
-                super().update({row[0]: row[1] for row in self._cursor.fetchall()})
+                dict.update(self, {row[0]: row[1] for row in self._cursor.fetchall()})
 
         def __setitem__(self, k, v):
-            super().__setitem__(k, v)
+            dict.__setitem__(self, k, v)
             print('setting', k, v)
             self._cursor.execute(
                 'INSERT INTO metadata (name, value) values (?, ?)', (k, v))
             self._db.commit()
 
         def update(self, *args, **kwargs):
-            super().update(*args, **kwargs)
+            dict.update(self, *args, **kwargs)
             self._cursor.executemany(
                 'INSERT INTO metadata (name, value) values (?, ?)',
                 self.items())
@@ -61,10 +64,15 @@ class MBtiles(object):
         elif 'r' in mode:
             raise IOError('mbtiles not found: {0}'.format(filename))
 
-        connect_mode = 'ro' if mode == 'r' else 'rwc'
-        self._db = sqlite3.connect(
-            'file:{0}?mode={1}'.format(filename, connect_mode),
-            uri=True, isolation_level=None)
+        if IS_PY2:
+            self._db = sqlite3.connect(filename, isolation_level=None)
+
+        else:
+            connect_mode = 'ro' if mode == 'r' else 'rwc'
+            self._db = sqlite3.connect(
+                'file:{0}?mode={1}'.format(filename, connect_mode),
+                uri=True, isolation_level=None)
+
         self._cursor = self._db.cursor()
 
         self._cursor.execute('PRAGMA synchronous=OFF')
@@ -123,6 +131,10 @@ class MBtiles(object):
         row = self._cursor.fetchone()
         if row is None:
             return None
+
+        if IS_PY2:
+            return str(row[0])
+
         return row[0]
 
     def write_tile(self, z, x, y, data):

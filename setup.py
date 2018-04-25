@@ -18,7 +18,7 @@ if os.path.exists('README.md'):
 
 setup(
     name='pymbtiles',
-    version='0.1.0',
+    version='0.2.0',
     packages=['pymbtiles'],
     url='https://github.com/consbio/pymbtiles',
     license='ISC',

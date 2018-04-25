@@ -1,8 +1,11 @@
 import sqlite3
 import os
+import sys
 import pytest
 
 from pymbtiles import MBtiles, Tile
+
+IS_PY2 = sys.version_info[0] == 2
 
 
 def test_read_missing_file(tmpdir):
@@ -49,7 +52,7 @@ def test_write_tile(tmpdir, blank_png_tile):
         )
         row = cursor.fetchone()
         assert row is not None
-        assert row[0] == blank_png_tile
+        assert blank_png_tile == str(row[0]) if IS_PY2 else row[0]
 
 
 def test_write_tiles(tmpdir, blank_png_tile):
@@ -67,8 +70,8 @@ def test_write_tiles(tmpdir, blank_png_tile):
         cursor.execute('SELECT tile_data FROM tiles')
         rows = cursor.fetchall()
         assert len(rows) == 2
-        assert rows[0][0] == tiles[0].data
-        assert rows[1][0] == tiles[1].data
+        for i, row in enumerate(rows):
+            assert tiles[i].data == str(row[0]) if IS_PY2 else row[0]
 
 
 def test_read_tile(tmpdir, blank_png_tile):
