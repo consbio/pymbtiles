@@ -97,7 +97,6 @@ with MBtiles('my.mbtiles', 'w') as out:
 
 
 ## Credits:
-Tile package format is described [here](https://gdbgeek.wordpress.com/2012/08/09/demystifying-the-esri-compact-cache/).
 
 Inspired by:
 * [mbutil](https://github.com/mapbox/mbutil)
