@@ -1,12 +1,12 @@
 language: python
 python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
+    - "2.7"
+    - "3.5"
+    - "3.6"
 install:
-  - "pip install -e ."
-  - "pip install -e .[test]"
-  - "pip install coveralls>=1.1"
-script: "py.test --cov pymbtiles --cov-report term-missing"
+    - "pip install -e ."
+    - "pip install pytest pytest-cov"
+    - "pip install coveralls>=1.1"
+script: "pytest --cov pymbtiles --cov-report term-missing"
 after_success:
-  - coveralls || echo "!! intermittent coveralls failure"
+    - coveralls || echo "!! intermittent coveralls failure"
