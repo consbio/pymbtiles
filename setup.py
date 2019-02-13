@@ -13,6 +13,4 @@ setup(
     long_description_content_type="text/markdown",
     long_description=open("README.md").read(),
     install_requires=[],
-    include_package_data=True,
-    extras_require={"test": ["pytest", "pytest-cov"]},
 )
