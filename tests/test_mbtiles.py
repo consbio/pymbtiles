@@ -84,6 +84,24 @@ def test_overwrite_tile(tmpdir, blank_png_tile):
         assert src.read_tile(0, 0, 0) == b"123"
 
 
+def test_overwrite_tiles(tmpdir, blank_png_tile):
+    filename = str(tmpdir.join("test.pymbtiles"))
+    tiles = (Tile(1, 0, 0, blank_png_tile), Tile(1, 0, 1, blank_png_tile))
+    new_tiles = (Tile(1, 0, 0, b"123"), Tile(1, 0, 1, b"456"))
+
+    with MBtiles(filename, mode="w") as out:
+        out.write_tiles(tiles)
+        out.write_tiles(new_tiles)
+
+    with sqlite3.connect(filename) as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT tile_data FROM tiles")
+        rows = cursor.fetchall()
+        assert len(rows) == 2
+        for i, row in enumerate(rows):
+            assert new_tiles[i].data == str(row[0]) if IS_PY2 else row[0]
+
+
 def test_has_tile(tmpdir, blank_png_tile):
     filename = str(tmpdir.join("test.pymbtiles"))
 
@@ -142,6 +160,34 @@ def test_write_metadata(tmpdir):
         row = cursor.fetchone()
         assert row is not None
         assert row[0] == "bar"
+
+
+def test_overwite_metadata(tmpdir):
+    filename = str(tmpdir.join("test.pymbtiles"))
+
+    metadata = {"name": "test tiles", "version": "1.0.0"}
+    new_metadata = {"name": "new test tiles", "version": "100000.0.0"}
+
+    with MBtiles(filename, mode="w") as out:
+        out.meta = metadata
+        out.meta = new_metadata
+
+    with sqlite3.connect(filename) as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT name, value from metadata")
+        out = {row[0]: row[1] for row in cursor.fetchall()}
+        assert out == new_metadata
+
+    # overwrite existing key, value
+    with MBtiles(filename, mode="r+") as out:
+        out.meta["name"] = "new new test tiles"
+
+    with sqlite3.connect(filename) as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT value from metadata WHERE name='name' LIMIT 1")
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "new new test tiles"
 
 
 def test_read_metadata(tmpdir):

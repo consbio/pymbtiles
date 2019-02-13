@@ -32,14 +32,15 @@ class MBtiles(object):
             dict.__setitem__(self, k, v)
             print("setting", k, v)
             self._cursor.execute(
-                "INSERT INTO metadata (name, value) values (?, ?)", (k, v)
+                "INSERT OR REPLACE INTO metadata (name, value) values (?, ?)", (k, v)
             )
             self._db.commit()
 
         def update(self, *args, **kwargs):
             dict.update(self, *args, **kwargs)
             self._cursor.executemany(
-                "INSERT INTO metadata (name, value) values (?, ?)", self.items()
+                "INSERT OR REPLACE INTO metadata (name, value) values (?, ?)",
+                self.items(),
             )
             self._db.commit()
 
@@ -197,12 +198,12 @@ class MBtiles(object):
             for tile in tiles:
                 id = hashlib.sha1(tile.data).hexdigest()
                 self._cursor.execute(
-                    "INSERT OR IGNORE INTO images (tile_id, tile_data) values (?, ?)",
+                    "INSERT OR REPLACE INTO images (tile_id, tile_data) values (?, ?)",
                     (id, sqlite3.Binary(tile.data)),
                 )
 
                 self._cursor.execute(
-                    "INSERT INTO map "
+                    "INSERT OR REPLACE INTO map "
                     "(zoom_level, tile_column, tile_row, tile_id) "
                     "values(?, ?, ?, ?)",
                     (tile.z, tile.x, tile.y, id),
@@ -213,34 +214,6 @@ class MBtiles(object):
         except self._db.Error:  # pragma: no cover
             logger.exception("Error inserting tiles, rolling back database")
             self._cursor.execute("ROLLBACK")
-
-    # def read_metadata(self):
-    #     """
-    #     Reads the metadata table using a dictionary of string key-value pairs.
-    #
-    #     Returns
-    #     -------
-    #     dictionary containing string key-value pairs
-    #     """
-    #
-    #     self._cursor.execute('SELECT name, value from metadata')
-    #     return {row[0]: row[1] for row in self._cursor.fetchall()}
-    #
-    # def write_metadata(self, metadata):
-    #     """
-    #     Set the metadata table using a dictionary of string key-value pairs.
-    #
-    #     Parameters
-    #     ----------
-    #     metadata: dict
-    #         dictionary containing string key-value pairs
-    #     """
-    #
-    #     self._cursor.executemany(
-    #         'INSERT INTO metadata (name, value) values (?, ?)',
-    #         metadata.items())
-    #
-    #     self._db.commit()
 
     def close(self):
         """

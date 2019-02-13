@@ -1,26 +1,26 @@
-
 # Mapbox MBtiles Utilities
 
 A Python 2.7 and 3 library for working with [Mabox mbtiles v1.1](https://github.com/mapbox/mbtiles-spec/blob/master/1.1/spec.md)
 
 [![Build Status](https://travis-ci.org/consbio/pymbtiles.svg?branch=master)](https://travis-ci.org/consbio/pymbtiles) [![Coverage Status](https://coveralls.io/repos/github/consbio/pymbtiles/badge.svg?branch=master)](https://coveralls.io/github/consbio/pymbtiles?branch=master)
 
+## Features
 
-## Goals
-* Provide a very lightweight API for reading / writing mbtiles files
+Provides a lighweight Python API for reading and writing mbtiles files.
 
-
+[Mabox mbtiles v1.1](https://github.com/mapbox/mbtiles-spec/blob/master/1.1/spec.md) allow you to store geographic data as rendered image tiles or as vector tiles, along with associated metadata.
 
 ## Installation
-For now, while this is under active development, install from master
-branch on GitHub using pip:
+
 ```
-pip install git+https://github.com/consbio/pymbtiles.git --upgrade
+pip install pymbtiles
 ```
 
-Once functionality stabilizes, it will be added to
-[PyPi](https://pypi.python.org/pypi)
+To install from master branch on GitHub using pip:
 
+```
+pip install git+https://github.com/consbio/pymbtiles.git#egg=pymbtiles --upgrade
+```
 
 ## Usage
 
@@ -35,7 +35,6 @@ with MBtiles('my.mbtiles') as src:
 ```
 
 returns tile data in bytes.
-
 
 open for writing (existing file will be overwritten):
 
@@ -58,9 +57,7 @@ with MBtiles('my.mbtiles', mode='w') as out:
     out.write_tiles(tiles)
 ```
 
-
 Use `r+` mode to read and write.
-
 
 Metadata is stored in the `meta` attribute of the mbtiles instance:
 
@@ -72,7 +69,6 @@ with MBtiles('my.mbtiles') as src:
 This metadata is stored in the `metadata` table in the mbtiles file, and contains
 a number of records required or optional under the
 [mbtiles specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.1/spec.md) .
-
 
 To update metadata:
 
@@ -88,23 +84,31 @@ with MBtiles('my.mbtiles', 'w') as out:
     out.meta = my_metadata_dict
 ```
 
+_Note:_
 
+-   tiles are output to mbtiles format in xyz tile scheme.
 
+## Possibly useful:
 
-*Note:*
-* tiles are output to mbtiles format in xyz tile scheme.
+-   [`mbtileserver`](https://github.com/consbio/mbtileserver): a lightweight Go tile server
+-   [`tpkutils`](https://github.com/consbio/tpkutils): a library for converting ArcGIS tile cache to mbtiles
 
+## Changes :
 
+### 0.3.0
+
+-   all write-like operations for metadata and tiles are now overwrite by default
 
 ## Credits:
 
 Inspired by:
-* [mbutil](https://github.com/mapbox/mbutil)
-* [node-mbtiles](https://github.com/mapbox/node-mbtiles)
+
+-   [mbutil](https://github.com/mapbox/mbutil)
+-   [node-mbtiles](https://github.com/mapbox/node-mbtiles)
 
 SQL for creating mbtiles database derived from
 [node-mbtiles](https://github.com/mapbox/node-mbtiles)
 
-
 ## License:
+
 See LICENSE.md
