@@ -170,12 +170,12 @@ class MBtiles(object):
         id = hashlib.sha1(data).hexdigest()
 
         self._cursor.execute(
-            "INSERT OR IGNORE INTO images (tile_id, tile_data) values (?, ?)",
+            "INSERT OR REPLACE INTO images (tile_id, tile_data) values (?, ?)",
             (id, sqlite3.Binary(data)),  # is this necessary
         )
 
         self._cursor.execute(
-            "INSERT INTO map "
+            "INSERT OR REPLACE INTO map "
             "(zoom_level, tile_column, tile_row, tile_id) "
             "values(?, ?, ?, ?)",
             (z, x, y, id),

@@ -71,6 +71,19 @@ def test_write_tiles(tmpdir, blank_png_tile):
             assert tiles[i].data == str(row[0]) if IS_PY2 else row[0]
 
 
+def test_overwrite_tile(tmpdir, blank_png_tile):
+    # Should not fail if we send in a duplicate tile
+    filename = str(tmpdir.join("test.pymbtiles"))
+    with MBtiles(filename, mode="w") as out:
+        out.write_tile(0, 0, 0, blank_png_tile)
+
+        # overwrite tile previously written
+        out.write_tile(0, 0, 0, b"123")
+
+    with MBtiles(filename, mode="r") as src:
+        assert src.read_tile(0, 0, 0) == b"123"
+
+
 def test_has_tile(tmpdir, blank_png_tile):
     filename = str(tmpdir.join("test.pymbtiles"))
 
