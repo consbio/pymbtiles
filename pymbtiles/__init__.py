@@ -5,18 +5,18 @@ import sys
 import sqlite3
 from collections import namedtuple
 
-logger = logging.getLogger('pymbtiles')
+logger = logging.getLogger("pymbtiles")
 
 IS_PY2 = sys.version_info[0] == 2
 
 
-Tile = namedtuple('Tile', ['z', 'x', 'y', 'data'])
+Tile = namedtuple("Tile", ["z", "x", "y", "data"])
 
 
 class MBtiles(object):
     """
     Interface for reading and writing mbtiles files.
-    
+
     meta attribute maps to the metadata table in the mbtiles file.
     """
 
@@ -25,24 +25,25 @@ class MBtiles(object):
             self._db = db
             self._cursor = cursor
             if autoload:
-                self._cursor.execute('SELECT name, value from metadata')
+                self._cursor.execute("SELECT name, value from metadata")
                 dict.update(self, {row[0]: row[1] for row in self._cursor.fetchall()})
 
         def __setitem__(self, k, v):
             dict.__setitem__(self, k, v)
-            print('setting', k, v)
+            print("setting", k, v)
             self._cursor.execute(
-                'INSERT INTO metadata (name, value) values (?, ?)', (k, v))
+                "INSERT INTO metadata (name, value) values (?, ?)", (k, v)
+            )
             self._db.commit()
 
         def update(self, *args, **kwargs):
             dict.update(self, *args, **kwargs)
             self._cursor.executemany(
-                'INSERT INTO metadata (name, value) values (?, ?)',
-                self.items())
+                "INSERT INTO metadata (name, value) values (?, ?)", self.items()
+            )
             self._db.commit()
 
-    def __init__(self, filename, mode='r'):
+    def __init__(self, filename, mode="r"):
         """
         Creates an open mbtiles file.  Must be closed after all data are added.
 
@@ -55,35 +56,37 @@ class MBtiles(object):
         """
 
         self.mode = mode
-        if mode not in ('r', 'w', 'r+'):
-            raise ValueError('Mode must be r, w, or r+')
+        if mode not in ("r", "w", "r+"):
+            raise ValueError("Mode must be r, w, or r+")
 
         if os.path.exists(filename):
-            if mode == 'w':
+            if mode == "w":
                 os.remove(filename)
-        elif 'r' in mode:
-            raise IOError('mbtiles not found: {0}'.format(filename))
+        elif "r" in mode:
+            raise IOError("mbtiles not found: {0}".format(filename))
 
         if IS_PY2:
             self._db = sqlite3.connect(filename, isolation_level=None)
 
         else:
-            connect_mode = 'ro' if mode == 'r' else 'rwc'
+            connect_mode = "ro" if mode == "r" else "rwc"
             self._db = sqlite3.connect(
-                'file:{0}?mode={1}'.format(filename, connect_mode),
-                uri=True, isolation_level=None)
+                "file:{0}?mode={1}".format(filename, connect_mode),
+                uri=True,
+                isolation_level=None,
+            )
 
         self._cursor = self._db.cursor()
 
-        self._cursor.execute('PRAGMA synchronous=OFF')
-        self._cursor.execute('PRAGMA journal_mode=OFF')  # TODO: DELETE or WAL?
-        self._cursor.execute('PRAGMA locking_mode=EXCLUSIVE')
+        self._cursor.execute("PRAGMA synchronous=OFF")
+        self._cursor.execute("PRAGMA journal_mode=OFF")  # TODO: DELETE or WAL?
+        self._cursor.execute("PRAGMA locking_mode=EXCLUSIVE")
 
         # initialize tables if needed
-        if mode != 'r':
+        if mode != "r":
             schema = open(
-                os.path.join(os.path.dirname(__file__),
-                             'mbtiles_tile_schema.sql')).read()
+                os.path.join(os.path.dirname(__file__), "mbtiles_tile_schema.sql")
+            ).read()
             self._cursor.executescript(schema)
             self._db.commit()
 
@@ -104,10 +107,20 @@ class MBtiles(object):
         self._meta = self.Metadata(self._db, self._cursor, autoload=False)
         self._meta.update(value)
 
+    def has_tile(self, z, x, y):
+        self._cursor.execute(
+            "SELECT EXISTS (SELECT 1 FROM tiles "
+            "where zoom_level=? and tile_column=? and tile_row=? LIMIT 1)",
+            (z, x, y),
+        )
+
+        row = self._cursor.fetchone()
+        return row[0] == 1
+
     def read_tile(self, z, x, y):
         """
         Get a tile for z, x, y values
-        
+
         Parameters
         ----------
         z: int
@@ -123,9 +136,9 @@ class MBtiles(object):
         """
 
         self._cursor.execute(
-            'SELECT tile_data FROM tiles '
-            'where zoom_level=? and tile_column=? and tile_row=? LIMIT 1',
-            (z, x, y)
+            "SELECT tile_data FROM tiles "
+            "where zoom_level=? and tile_column=? and tile_row=? LIMIT 1",
+            (z, x, y),
         )
 
         row = self._cursor.fetchone()
@@ -157,15 +170,15 @@ class MBtiles(object):
         id = hashlib.sha1(data).hexdigest()
 
         self._cursor.execute(
-            'INSERT OR IGNORE INTO images (tile_id, tile_data) values (?, ?)',
-            (id, sqlite3.Binary(data))  # is this necessary
+            "INSERT OR IGNORE INTO images (tile_id, tile_data) values (?, ?)",
+            (id, sqlite3.Binary(data)),  # is this necessary
         )
 
         self._cursor.execute(
-            'INSERT INTO map '
-            '(zoom_level, tile_column, tile_row, tile_id) '
-            'values(?, ?, ?, ?)',
-            (z, x, y, id)
+            "INSERT INTO map "
+            "(zoom_level, tile_column, tile_row, tile_id) "
+            "values(?, ?, ?, ?)",
+            (z, x, y, id),
         )
 
         self._db.commit()
@@ -178,28 +191,28 @@ class MBtiles(object):
         tiles: iterable of Tile(z, x, y, data) tuples
         """
 
-        self._cursor.execute('BEGIN')
+        self._cursor.execute("BEGIN")
 
         try:
             for tile in tiles:
                 id = hashlib.sha1(tile.data).hexdigest()
                 self._cursor.execute(
-                    'INSERT OR IGNORE INTO images (tile_id, tile_data) values (?, ?)',
-                    (id, sqlite3.Binary(tile.data))
+                    "INSERT OR IGNORE INTO images (tile_id, tile_data) values (?, ?)",
+                    (id, sqlite3.Binary(tile.data)),
                 )
 
                 self._cursor.execute(
-                    'INSERT INTO map '
-                    '(zoom_level, tile_column, tile_row, tile_id) '
-                    'values(?, ?, ?, ?)',
-                    (tile.z, tile.x, tile.y, id)
+                    "INSERT INTO map "
+                    "(zoom_level, tile_column, tile_row, tile_id) "
+                    "values(?, ?, ?, ?)",
+                    (tile.z, tile.x, tile.y, id),
                 )
 
-            self._cursor.execute('COMMIT')
+            self._cursor.execute("COMMIT")
 
         except self._db.Error:  # pragma: no cover
-            logger.exception('Error inserting tiles, rolling back database')
-            self._cursor.execute('ROLLBACK')
+            logger.exception("Error inserting tiles, rolling back database")
+            self._cursor.execute("ROLLBACK")
 
     # def read_metadata(self):
     #     """
@@ -234,9 +247,9 @@ class MBtiles(object):
         Close the mbtiles file.  Vacuums database prior to closing.
         """
 
-        if self.mode != 'r':
-            self._cursor.execute('ANALYZE')
-            self._cursor.execute('VACUUM')
+        if self.mode != "r":
+            self._cursor.execute("ANALYZE")
+            self._cursor.execute("VACUUM")
 
         self._cursor.close()
         self._db.close()
