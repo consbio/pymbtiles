@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="pymbtiles",
-    version="0.3.0",
+    version="0.3.1",
     packages=["pymbtiles"],
     url="https://github.com/consbio/pymbtiles",
     license="ISC",
@@ -13,4 +13,5 @@ setup(
     long_description_content_type="text/markdown",
     long_description=open("README.md").read(),
     install_requires=[],
+    include_package_data=True,
 )
