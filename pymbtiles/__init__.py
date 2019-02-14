@@ -214,15 +214,12 @@ class MBtiles(object):
         except self._db.Error:  # pragma: no cover
             logger.exception("Error inserting tiles, rolling back database")
             self._cursor.execute("ROLLBACK")
+            raise
 
     def close(self):
         """
-        Close the mbtiles file.  Vacuums database prior to closing.
+        Close the mbtiles file.
         """
-
-        if self.mode != "r":
-            self._cursor.execute("ANALYZE")
-            self._cursor.execute("VACUUM")
 
         self._cursor.close()
         self._db.close()
