@@ -3,26 +3,26 @@ import os
 import sys
 import pytest
 
-from pymbtiles import MBtiles, Tile
+from pymbtiles import MBtiles, Tile, TileCoordinate
 
 IS_PY2 = sys.version_info[0] == 2
 
 
 def test_read_missing_file(tmpdir):
-    mbtiles_filename = str(tmpdir.join("test.pymbtiles"))
+    mbtiles_filename = str(tmpdir.join("test.mbtiles"))
     with pytest.raises(IOError):
         MBtiles(mbtiles_filename)
 
 
 def test_invalid_mode(tmpdir):
-    mbtiles_filename = str(tmpdir.join("test.pymbtiles"))
+    mbtiles_filename = str(tmpdir.join("test.mbtiles"))
 
     with pytest.raises(ValueError):
         MBtiles(mbtiles_filename, mode="r+w")
 
 
 def test_existing_file(tmpdir, blank_png_tile):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
 
     # create a file first
     with MBtiles(filename, mode="w") as out:
@@ -40,7 +40,7 @@ def test_existing_file(tmpdir, blank_png_tile):
 
 
 def test_write_tile(tmpdir, blank_png_tile):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
     with MBtiles(filename, mode="w") as out:
         out.write_tile(0, 0, 0, blank_png_tile)
 
@@ -56,7 +56,7 @@ def test_write_tile(tmpdir, blank_png_tile):
 
 
 def test_write_tiles(tmpdir, blank_png_tile):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
     tiles = (Tile(1, 0, 0, blank_png_tile), Tile(1, 0, 1, blank_png_tile))
 
     with MBtiles(filename, mode="w") as out:
@@ -73,7 +73,7 @@ def test_write_tiles(tmpdir, blank_png_tile):
 
 def test_overwrite_tile(tmpdir, blank_png_tile):
     # Should not fail if we send in a duplicate tile
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
     with MBtiles(filename, mode="w") as out:
         out.write_tile(0, 0, 0, blank_png_tile)
 
@@ -85,7 +85,7 @@ def test_overwrite_tile(tmpdir, blank_png_tile):
 
 
 def test_overwrite_tiles(tmpdir, blank_png_tile):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
     tiles = (Tile(1, 0, 0, blank_png_tile), Tile(1, 0, 1, blank_png_tile))
     new_tiles = (Tile(1, 0, 0, b"123"), Tile(1, 0, 1, b"456"))
 
@@ -103,7 +103,7 @@ def test_overwrite_tiles(tmpdir, blank_png_tile):
 
 
 def test_has_tile(tmpdir, blank_png_tile):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
 
     # Create mbtiles file with a tile to read
     with MBtiles(filename, mode="w") as out:
@@ -114,8 +114,55 @@ def test_has_tile(tmpdir, blank_png_tile):
         assert src.has_tile(10, 10, 10) == False
 
 
+def test_list_tiles(tmpdir):
+    zoom = 2
+
+    filename = str(tmpdir.join("test.mbtiles"))
+    with MBtiles(filename, mode="w") as out:
+        tiles = []
+        num_per_edge = 2 ** zoom
+        for x in range(0, num_per_edge):
+            for y in range(0, num_per_edge):
+                tiles.append(Tile(zoom, x, y, b""))
+
+        out.write_tiles(tiles)
+
+    with MBtiles(filename, mode="r") as src:
+        tiles = src.list_tiles()
+        assert len(tiles) == (2 ** zoom) ** 2
+        assert isinstance(tiles[0], TileCoordinate)
+
+
+def test_list_tiles_batched(tmpdir):
+    zoom = 2
+
+    filename = str(tmpdir.join("test.mbtiles"))
+    with MBtiles(filename, mode="w") as out:
+        tiles = []
+        num_per_edge = 2 ** zoom
+        for x in range(0, num_per_edge):
+            for y in range(0, num_per_edge):
+                tiles.append(Tile(zoom, x, y, b""))
+
+        out.write_tiles(tiles)
+
+    with MBtiles(filename, mode="r") as src:
+        batch = list(src.list_tiles_batched())
+        print("batch", batch)
+        assert len(batch) == 1
+        tiles = batch[0]
+        assert len(tiles) == (2 ** zoom) ** 2
+        assert isinstance(tiles[0], TileCoordinate)
+
+        # test batch size
+        batch = list(src.list_tiles_batched(2))
+        assert len(batch) == ((2 ** zoom) ** 2) / 2
+        tiles = batch[0]
+        assert len(tiles) == 2
+
+
 def test_read_tile(tmpdir, blank_png_tile):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
 
     # Create mbtiles file with a tile to read
     with MBtiles(filename, mode="w") as out:
@@ -126,7 +173,7 @@ def test_read_tile(tmpdir, blank_png_tile):
 
 
 def test_read_missing_tile(tmpdir, blank_png_tile):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
 
     # Create mbtiles file with a tile to read
     with MBtiles(filename, mode="w") as out:
@@ -137,7 +184,7 @@ def test_read_missing_tile(tmpdir, blank_png_tile):
 
 
 def test_write_metadata(tmpdir):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
 
     metadata = {"name": "test tiles", "version": "1.0.0"}
 
@@ -163,7 +210,7 @@ def test_write_metadata(tmpdir):
 
 
 def test_overwite_metadata(tmpdir):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
 
     metadata = {"name": "test tiles", "version": "1.0.0"}
     new_metadata = {"name": "new test tiles", "version": "100000.0.0"}
@@ -191,7 +238,7 @@ def test_overwite_metadata(tmpdir):
 
 
 def test_read_metadata(tmpdir):
-    filename = str(tmpdir.join("test.pymbtiles"))
+    filename = str(tmpdir.join("test.mbtiles"))
 
     metadata = {"name": "test tiles", "version": "1.0.0"}
 

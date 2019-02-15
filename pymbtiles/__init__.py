@@ -11,6 +11,7 @@ IS_PY2 = sys.version_info[0] == 2
 
 
 Tile = namedtuple("Tile", ["z", "x", "y", "data"])
+TileCoordinate = namedtuple("TileCoordinate", ["z", "x", "y"])
 
 
 class MBtiles(object):
@@ -66,7 +67,7 @@ class MBtiles(object):
         elif "r" in mode:
             raise IOError("mbtiles not found: {0}".format(filename))
 
-        if IS_PY2:
+        if IS_PY2:  # pragma: no cover
             self._db = sqlite3.connect(filename, isolation_level=None)
 
         else:
@@ -118,6 +119,49 @@ class MBtiles(object):
         row = self._cursor.fetchone()
         return row[0] == 1
 
+    def list_tiles(self):
+        """Read a list of TileCoordinate (z, x, y) tuples from the tileset.
+
+        For large tilesets, use a list_tiles_batched to avoid reading all tiles into memory.
+        
+        Returns
+        -------
+        list of TileCoordinate objects
+        """
+
+        self._cursor.execute("select zoom_level, tile_column, tile_row from tiles")
+        return [TileCoordinate(*tile) for tile in self._cursor.fetchall()]
+
+    def list_tiles_batched(self, batch_size=1000):
+        """Read a list of TileCoordinate (z, x, y) tuples from the tileset, in batches.
+
+        Use this for larger tilesets to avoid reading all tiles into memory.
+        
+        Parameters
+        ----------
+        batch_size : int, optional (default: None)
+            If present, tiles are read in batches using a generator.
+            Otherwise, tiles are returned as a generator.
+        
+        Returns
+        -------
+        generator over each batch, each batch is a list of TileCoordinate objects
+        """
+
+        offset = 0
+        while True:
+            self._cursor.execute(
+                "select zoom_level, tile_column, tile_row from tiles limit {limit} offset {offset}".format(
+                    offset=offset, limit=batch_size
+                )
+            )
+            offset += batch_size
+            tiles = [TileCoordinate(z, x, y) for z, x, y in self._cursor.fetchall()]
+            if len(tiles):
+                yield tiles
+            else:
+                return
+
     def read_tile(self, z, x, y):
         """
         Get a tile for z, x, y values
@@ -146,7 +190,7 @@ class MBtiles(object):
         if row is None:
             return None
 
-        if IS_PY2:
+        if IS_PY2:  # pragma: no cover
             return str(row[0])
 
         return row[0]

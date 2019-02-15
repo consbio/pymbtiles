@@ -84,9 +84,52 @@ with MBtiles('my.mbtiles', 'w') as out:
     out.meta = my_metadata_dict
 ```
 
-_Note:_
+## Listing available tiles
 
--   tiles are output to mbtiles format in xyz tile scheme.
+To list available tiles in the tileset:
+
+```
+with MBtiles('my.mbtiles') as src:
+    for tile_coords in src.list_tiles():  # [TileCoordinate(z, x, y)...]
+        ...
+```
+
+_WARNING:_ for large tilesets, this can exceed available memory.
+
+To list available tilesets for large tilesets, use:
+
+```
+with MBtiles('my.mbtiles') as src:
+    for batch in src.list_tiles_batched():
+        for tile_coords in batch: # [TileCoordinate(z, x, y)...]
+            ...
+```
+
+## Set operations
+
+The `ops` module provides `extend`, `union`, and `difference` functions to perform set operations on tilesets.
+
+Extend a tileset with new tiles from a second:
+
+```
+extend(source_filename, target_filename)
+```
+
+Create a new tileset with unique tiles combined from both left and right tilesets:
+
+```
+union(left_filename, right_filename, out_filename)
+```
+
+Create a new tileset from the tileset in the left tileset not present in the right tileset:
+
+```
+difference(left_filename, right_filename, out_filename)
+```
+
+## Tile Scheme
+
+Tiles are output to mbtiles format in xyz tile scheme.
 
 ## Possibly useful:
 
@@ -98,6 +141,11 @@ _Note:_
 ### 0.3.0
 
 -   all write-like operations for metadata and tiles are now overwrite by default
+
+### 0.4.0
+
+-   added `list_tiles` to list tiles and `list_tiles_batch` to list tiles in batches
+-   added `ops` module with `extend`, `union`, `difference` functions
 
 ## Credits:
 
