@@ -138,6 +138,10 @@ Tiles are output to mbtiles format in xyz tile scheme.
 
 ## Changes :
 
+### 0.5.0
+
+-   added `zoom_range`, `row_range`, `col_range` to provide basic information about tiles available in the tileset
+
 ### 0.4.0
 
 -   added `list_tiles` to list tiles and `list_tiles_batch` to list tiles in batches

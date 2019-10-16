@@ -237,6 +237,55 @@ def test_overwite_metadata(tmpdir):
         assert row[0] == "new new test tiles"
 
 
+def test_ranges(tmpdir):
+    zooms = [0, 1, 2]
+    filename = str(tmpdir.join("test.mbtiles"))
+    with MBtiles(filename, mode="w") as out:
+        tiles = []
+        for zoom in zooms:
+            num_per_edge = 2 ** zoom
+            for x in range(0, num_per_edge):
+                for y in range(0, num_per_edge):
+                    tiles.append(Tile(zoom, x, y, b""))
+
+        out.write_tiles(tiles)
+
+    with MBtiles(filename, mode="r") as src:
+        assert src.zoom_range() == (0, 2)
+
+        assert src.row_range(0) == (0, 0)
+        assert src.col_range(0) == (0, 0)
+
+        assert src.row_range(1) == (0, 1)
+        assert src.col_range(1) == (0, 1)
+
+        assert src.row_range(2) == (0, 3)
+        assert src.col_range(2) == (0, 3)
+
+        # ranges beyond available zoom levels should be none
+        assert src.row_range(3) == (None, None)
+        assert src.col_range(3) == (None, None)
+
+
+def test_ranges_nonstandard(tmpdir):
+    filename = str(tmpdir.join("test.mbtiles"))
+    with MBtiles(filename, mode="w") as out:
+
+        # outer bounds of tiles are rows [2, 5], columns [1, 7]
+        tiles = [
+            Tile(3, 1, 2, b""),
+            Tile(3, 3, 5, b""),
+            Tile(3, 6, 2, b""),
+            Tile(3, 7, 3, b""),
+        ]
+        out.write_tiles(tiles)
+
+    with MBtiles(filename, mode="r") as src:
+        assert src.zoom_range() == (3, 3)
+        assert src.row_range(3) == (2, 5)
+        assert src.col_range(3) == (1, 7)
+
+
 def test_read_metadata(tmpdir):
     filename = str(tmpdir.join("test.mbtiles"))
 

@@ -132,6 +132,54 @@ class MBtiles(object):
         self._cursor.execute("select zoom_level, tile_column, tile_row from tiles")
         return [TileCoordinate(*tile) for tile in self._cursor.fetchall()]
 
+    def zoom_range(self):
+        """Return the minimum and maximum zoom ranges available in the tileset.
+        """
+
+        return tuple(
+            self._cursor.execute(
+                "select min(zoom_level), max(zoom_level) from tiles"
+            ).fetchone()
+        )
+
+    def row_range(self, z=0):
+        """Return the minimum and maximum row available for a given zoom level.
+        
+        NOTE: this will return (None, None) for a zoom level not present in the tileset.
+        
+        Parameters
+        ----------
+        z : int, optional (default: 0)
+            zoom level to query for available rows
+        """
+
+        return tuple(
+            self._cursor.execute(
+                "select min(tile_row), max(tile_row) from tiles where zoom_level = {}".format(
+                    z
+                )
+            ).fetchone()
+        )
+
+    def col_range(self, z=0):
+        """Return the minimum and maximum column available for a given zoom level.
+
+        NOTE: this will return (None, None) for a zoom level not present in the tileset.
+        
+        Parameters
+        ----------
+        z : int, optional (default: 0)
+            zoom level to query for available columns
+        """
+
+        return tuple(
+            self._cursor.execute(
+                "select min(tile_column), max(tile_column) from tiles where zoom_level = {}".format(
+                    z
+                )
+            ).fetchone()
+        )
+
     def list_tiles_batched(self, batch_size=1000):
         """Read a list of TileCoordinate (z, x, y) tuples from the tileset, in batches.
 
