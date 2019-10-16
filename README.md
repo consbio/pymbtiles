@@ -138,14 +138,14 @@ Tiles are output to mbtiles format in xyz tile scheme.
 
 ## Changes :
 
-### 0.3.0
-
--   all write-like operations for metadata and tiles are now overwrite by default
-
 ### 0.4.0
 
 -   added `list_tiles` to list tiles and `list_tiles_batch` to list tiles in batches
 -   added `ops` module with `extend`, `union`, `difference` functions
+
+### 0.3.0
+
+-   all write-like operations for metadata and tiles are now overwrite by default
 
 ## Credits:
 

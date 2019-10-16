@@ -8,4 +8,8 @@ name = "pypi"
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
+black = "*"
+pylint = "*"
 
+[pipenv]
+allow_prereleases = true
