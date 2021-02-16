@@ -29,7 +29,7 @@ pip install git+https://github.com/consbio/pymbtiles.git#egg=pymbtiles --upgrade
 open for reading and read a tile:
 
 ```
-from pymbtiles import MBTiles
+from pymbtiles import MBtiles
 with MBtiles('my.mbtiles') as src:
     tile_data = src.read_tile(z=0, x=0, y=0)
 ```
@@ -46,7 +46,7 @@ with MBtiles('my.mbtiles', mode='w') as out:
 or write a bunch of tiles at once:
 
 ```
-from pymbtiles import MBTiles, Tile
+from pymbtiles import MBtiles, Tile
 
 tiles = (
     Tile(z=1, x=0, y=0, tile_data=first_tile),
